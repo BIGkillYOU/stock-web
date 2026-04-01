@@ -114,6 +114,12 @@ button:hover {
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbxcEJXO20Zs5YZ2EfgV00L1ehnSCwgdahbSOWb-xm6NrqBTU5uM8hvoGqpTGsqppihV/exec";
 
+function normalizePN(pn) {
+  return pn
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+}
+
 // 🔹 Database ตัวอย่าง
 const itemData = {
   "ABC123": { item: "Keyboard", brand: "Logitech", model: "K120" },
@@ -121,30 +127,48 @@ const itemData = {
 };
 
 // 🔹 Autofill
+let typingTimer;
+const delay = 400;
+
 function fillData() {
-  const pn = document.getElementById("pn").value;
+  const pnInput = document.getElementById("pn").value;
   const infoBox = document.getElementById("infoBox");
 
-  if (itemData[pn]) {
-    const data = itemData[pn];
-    infoBox.innerHTML = `
-      <b>Item:</b> ${data.item}<br>
-      <b>Brand:</b> ${data.brand}<br>
-      <b>Model:</b> ${data.model}
-    `;
-  } else {
-    infoBox.innerHTML = "❌ ไม่พบข้อมูล";
+  clearTimeout(typingTimer);
+
+  if (!pnInput) {
+    infoBox.innerHTML = "🔍 รอกรอก P/N";
+    return;
   }
+
+  infoBox.innerHTML = "⏳ กำลังค้นหา...";
+
+  typingTimer = setTimeout(() => {
+    const pn = normalizePN(pnInput);
+
+    if (itemData[pn]) {
+      const data = itemData[pn];
+      infoBox.innerHTML = `
+        <b>Item:</b> ${data.item}<br>
+        <b>Brand:</b> ${data.brand}<br>
+        <b>Model:</b> ${data.model}
+      `;
+    } else {
+      infoBox.innerHTML = "❌ ไม่พบข้อมูล";
+    }
+  }, delay);
 }
 
 // 🔹 ส่งข้อมูล
 async function sendData() {
-  const pn = document.getElementById("pn").value;
+  const pnInput = document.getElementById("pn").value;
+  const pn = normalizePN(pnInput);
   const sn = document.getElementById("sn").value;
+
   const resultBox = document.getElementById("result");
 
-  if (!itemData[pn]) {
-    resultBox.innerHTML = "❌ กรุณาใส่ P/N ให้ถูกต้อง";
+  if (!pnInput) {
+    resultBox.innerHTML = "❌ กรุณาใส่ P/N";
     return;
   }
 
@@ -153,8 +177,13 @@ async function sendData() {
     return;
   }
 
+  if (!itemData[pn]) {
+    resultBox.innerHTML = "❌ ไม่พบ P/N";
+    return;
+  }
+
   const data = {
-    pn: pn,
+    pn: pnInput,
     sn: sn,
     item: itemData[pn].item,
     brand: itemData[pn].brand,
@@ -169,12 +198,12 @@ async function sendData() {
       body: JSON.stringify(data)
     });
 
-    const result = await res.json();
+    await res.json();
 
     resultBox.innerHTML = "✅ บันทึกสำเร็จ!";
     document.getElementById("sn").value = "";
 
-  } catch (err) {
+  } catch {
     resultBox.innerHTML = "❌ เกิดข้อผิดพลาด";
   }
 }
