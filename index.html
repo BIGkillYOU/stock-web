@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stock Manager</title>
+<title>Stock Scanner</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
 
@@ -18,7 +18,6 @@ body {
   height: 100vh;
 }
 
-/* Card */
 .container {
   background: white;
   padding: 30px;
@@ -32,7 +31,6 @@ h2 {
   margin-bottom: 20px;
 }
 
-/* Input */
 .input-group {
   margin-bottom: 15px;
   text-align: left;
@@ -52,7 +50,6 @@ input {
   font-size: 16px;
 }
 
-/* Button */
 button {
   width: 100%;
   padding: 12px;
@@ -69,19 +66,8 @@ button:hover {
   background: #00c6ff;
 }
 
-/* Result */
 .result {
   margin-top: 15px;
-  font-size: 14px;
-}
-
-/* Auto fill box */
-.info-box {
-  background: #f1f7ff;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  text-align: left;
   font-size: 14px;
 }
 </style>
@@ -90,20 +76,16 @@ button:hover {
 <body>
 
 <div class="container">
-  <h2>📦 Stock Manager</h2>
+  <h2>📦 Stock Scanner</h2>
 
   <div class="input-group">
     <label>P/N</label>
-    <input type="text" id="pn" oninput="fillData()">
-  </div>
-
-  <div class="info-box" id="infoBox">
-    🔍 รอกรอก P/N
+    <input type="text" id="pn" onkeypress="handlePN(event)" autofocus>
   </div>
 
   <div class="input-group">
     <label>S/N</label>
-    <input type="text" id="sn">
+    <input type="text" id="sn" onkeypress="handleSN(event)">
   </div>
 
   <button onclick="sendData()">บันทึกข้อมูล</button>
@@ -114,60 +96,27 @@ button:hover {
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbxcEJXO20Zs5YZ2EfgV00L1ehnSCwgdahbSOWb-xm6NrqBTU5uM8hvoGqpTGsqppihV/exec";
 
-function normalizePN(pn) {
-  return pn
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
-}
-
-// 🔹 Database ตัวอย่าง
-const itemData = {
-  "ABC123": { item: "Keyboard", brand: "Logitech", model: "K120" },
-  "XYZ789": { item: "Mouse", brand: "Razer", model: "DeathAdder" }
-};
-
-// 🔹 Autofill
-let typingTimer;
-const delay = 400;
-
-function fillData() {
-  const pnInput = document.getElementById("pn").value;
-  const infoBox = document.getElementById("infoBox");
-
-  clearTimeout(typingTimer);
-
-  if (!pnInput) {
-    infoBox.innerHTML = "🔍 รอกรอก P/N";
-    return;
+// 🔹 ยิงบาร์โค้ด P/N แล้ว Enter → ไปช่อง S/N
+function handlePN(e) {
+  if (e.key === "Enter") {
+    document.getElementById("sn").focus();
   }
-
-  infoBox.innerHTML = "⏳ กำลังค้นหา...";
-
-  typingTimer = setTimeout(() => {
-    const pn = normalizePN(pnInput);
-
-    if (itemData[pn]) {
-      const data = itemData[pn];
-      infoBox.innerHTML = `
-        <b>Item:</b> ${data.item}<br>
-        <b>Brand:</b> ${data.brand}<br>
-        <b>Model:</b> ${data.model}
-      `;
-    } else {
-      infoBox.innerHTML = "❌ ไม่พบข้อมูล";
-    }
-  }, delay);
 }
 
-// 🔹 ส่งข้อมูล
-async function sendData() {
-  const pnInput = document.getElementById("pn").value;
-  const pn = normalizePN(pnInput);
-  const sn = document.getElementById("sn").value;
+// 🔹 ยิง S/N แล้ว Enter → บันทึก
+function handleSN(e) {
+  if (e.key === "Enter") {
+    sendData();
+  }
+}
 
+// 🔹 ส่งข้อมูลไป Google Sheet
+async function sendData() {
+  const pn = document.getElementById("pn").value.trim();
+  const sn = document.getElementById("sn").value.trim();
   const resultBox = document.getElementById("result");
 
-  if (!pnInput) {
+  if (!pn) {
     resultBox.innerHTML = "❌ กรุณาใส่ P/N";
     return;
   }
@@ -177,17 +126,12 @@ async function sendData() {
     return;
   }
 
-  if (!itemData[pn]) {
-    resultBox.innerHTML = "❌ ไม่พบ P/N";
-    return;
-  }
-
   const data = {
-    pn: pnInput,
+    pn: pn,
     sn: sn,
-    item: itemData[pn].item,
-    brand: itemData[pn].brand,
-    model: itemData[pn].model
+    item: "",
+    brand: "",
+    model: ""
   };
 
   resultBox.innerHTML = "⏳ กำลังบันทึก...";
@@ -201,9 +145,13 @@ async function sendData() {
     await res.json();
 
     resultBox.innerHTML = "✅ บันทึกสำเร็จ!";
-    document.getElementById("sn").value = "";
 
-  } catch {
+    // 🔥 เคลียร์ค่า + พร้อมสแกนต่อ
+    document.getElementById("pn").value = "";
+    document.getElementById("sn").value = "";
+    document.getElementById("pn").focus();
+
+  } catch (err) {
     resultBox.innerHTML = "❌ เกิดข้อผิดพลาด";
   }
 }
