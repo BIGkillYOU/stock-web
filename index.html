@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stock Dashboard</title>
+  <title>Stock Management</title>
 
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -13,22 +13,19 @@
 
 <div class="app">
 
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <h2>📦 STOCK</h2>
 
     <button onclick="navigate('dashboard')">Dashboard</button>
-    <button onclick="navigate('stock')">Stock Card</button>
+    <button onclick="navigate('stock')">Stock</button>
     <button onclick="renderTable('STOCK 2026 รับ')">Table Stock</button>
     <button onclick="renderTable('Spare Part')">Table Spare</button>
     <button onclick="renderTable('สินค้าเคลม ส่งซ่อม')">Table Repair</button>
 
     <hr>
-
     <button onclick="toggleTheme()">🌙 Theme</button>
   </aside>
 
-  <!-- MAIN -->
   <main class="main">
     <h1>Stock Management</h1>
     <div id="content"></div>
