@@ -29,7 +29,6 @@ body {
 }
 
 .sidebar button {
-  display: block;
   width: 100%;
   margin: 5px 0;
   padding: 10px;
@@ -43,7 +42,7 @@ body {
 
 .container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
   gap: 15px;
 }
 
@@ -51,11 +50,6 @@ body {
   background: var(--card);
   padding: 15px;
   border-radius: 10px;
-}
-
-.card p {
-  font-size: 20px;
-  font-weight: bold;
 }
 
 table {
