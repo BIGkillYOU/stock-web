@@ -17,11 +17,17 @@ function toggleTheme() {
 
 // ================= FETCH =================
 async function getSheetData(name) {
+  console.log("Loading:", name);
+
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(name)}`;
+
   const res = await fetch(url);
   const text = await res.text();
 
   const json = JSON.parse(text.substr(47).slice(0, -2));
+
+  console.log("DATA:", name, json);
+
   const cols = json.table.cols.map((c, i) => c.label || `col${i}`);
 
   return json.table.rows.map(r => {
@@ -39,6 +45,19 @@ let DB = {};
 async function loadAll() {
   const results = await Promise.all(SHEETS.map(s => getSheetData(s)));
   SHEETS.forEach((s, i) => DB[s] = results[i]);
+
+  console.log("FINAL DB:", DB);
+}
+
+// ================= MAP (แก้ column ไทย) =================
+function mapData(row) {
+  return {
+    name: row["ชื่อสินค้า"] || row["name"] || "-",
+    stock: Number(row["จำนวน"] || row["stock"] || 0),
+    price: Number(row["ราคา"] || row["price"] || 0),
+    brand: row["แบรนด์"] || row["brand"] || "Unknown",
+    supplier: row["ผู้ขาย"] || row["supplier"] || "-"
+  };
 }
 
 // ================= ROUTER =================
@@ -49,34 +68,32 @@ function navigate(page) {
 
 // ================= DASHBOARD =================
 function renderDashboard() {
-  let stock = DB["STOCK 2026 รับ"] || [];
+  const raw = DB["STOCK 2026 รับ"] || [];
+  const stock = raw.map(mapData);
 
   const totalItems = stock.length;
-  const totalStock = stock.reduce((s,i)=>s+Number(i.stock||0),0);
-  const totalPrice = stock.reduce((s,i)=>s+(Number(i.price||0)*Number(i.stock||0)),0);
+  const totalStock = stock.reduce((s,i)=>s+i.stock,0);
+  const totalPrice = stock.reduce((s,i)=>s+(i.price*i.stock),0);
 
   const low = stock.filter(i=>i.stock>0 && i.stock<=10).length;
-  const out = stock.filter(i=>i.stock==0).length;
+  const out = stock.filter(i=>i.stock===0).length;
 
   const brandMap = {};
   stock.forEach(i=>{
-    const b = i.brand || "Unknown";
-    brandMap[b] = (brandMap[b]||0)+1;
+    brandMap[i.brand] = (brandMap[i.brand]||0)+1;
   });
 
-  const suppliers = [...new Set(stock.map(i=>i.supplier).filter(Boolean))];
-
-  const lowItems = [...stock].sort((a,b)=>a.stock-b.stock).slice(0,5);
+  const suppliers = [...new Set(stock.map(i=>i.supplier))];
 
   document.getElementById("content").innerHTML = `
     <h2>Dashboard</h2>
 
     <div class="container">
-      <div class="card"><p>${totalItems}</p>Items</div>
-      <div class="card"><p>${totalStock}</p>Stock</div>
-      <div class="card"><p>${totalPrice}</p>Value</div>
-      <div class="card"><p>${low}</p>Low</div>
-      <div class="card"><p>${out}</p>Out</div>
+      <div class="card">Items: ${totalItems}</div>
+      <div class="card">Stock: ${totalStock}</div>
+      <div class="card">Value: ${totalPrice}</div>
+      <div class="card">Low: ${low}</div>
+      <div class="card">Out: ${out}</div>
     </div>
 
     <h3>Brand</h3>
@@ -87,11 +104,6 @@ function renderDashboard() {
     <h3>Supplier</h3>
     <div class="container">
       ${suppliers.map(s=>`<div class="card">${s}</div>`).join("")}
-    </div>
-
-    <h3>Low Stock</h3>
-    <div class="container">
-      ${lowItems.map(i=>`<div class="card">${i.name}<br>${i.stock}</div>`).join("")}
     </div>
 
     <canvas id="chart"></canvas>
@@ -106,14 +118,14 @@ function renderChart(data) {
     type: "bar",
     data: {
       labels: data.map(i=>i.name),
-      datasets: [{label:"Stock", data:data.map(i=>Number(i.stock))}]
+      datasets: [{label:"Stock", data:data.map(i=>i.stock)}]
     }
   });
 }
 
-// ================= STOCK CARD =================
+// ================= STOCK =================
 function renderStock() {
-  const stock = DB["STOCK 2026 รับ"] || [];
+  const stock = (DB["STOCK 2026 รับ"] || []).map(mapData);
 
   document.getElementById("content").innerHTML = `
     <div class="container">
@@ -130,7 +142,10 @@ function renderStock() {
 // ================= TABLE =================
 function renderTable(name) {
   const data = DB[name] || [];
-  if (!data.length) return;
+  if (!data.length) {
+    document.getElementById("content").innerHTML = "No data";
+    return;
+  }
 
   const headers = Object.keys(data[0]);
 
@@ -148,8 +163,9 @@ function renderTable(name) {
 // ================= INIT =================
 async function init() {
   document.documentElement.setAttribute("data-theme", localStorage.getItem("theme") || "dark");
+
   await loadAll();
-  console.log(DB);
+
   renderDashboard();
 }
 
