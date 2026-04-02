@@ -15,10 +15,8 @@ function toggleTheme() {
   localStorage.setItem("theme", t);
 }
 
-// ================= FETCH =================
+// ================= FETCH (แก้ col0) =================
 async function getSheetData(name) {
-  console.log("Loading:", name);
-
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(name)}`;
 
   const res = await fetch(url);
@@ -26,14 +24,16 @@ async function getSheetData(name) {
 
   const json = JSON.parse(text.substr(47).slice(0, -2));
 
-  console.log("DATA:", name, json);
-
-  const cols = json.table.cols.map((c, i) => c.label || `col${i}`);
+  // เอาเฉพาะคอลัมน์ที่มีชื่อ
+  const validCols = json.table.cols
+    .map((c, i) => ({ name: c.label, index: i }))
+    .filter(c => c.name && c.name.trim() !== "");
 
   return json.table.rows.map(r => {
     let obj = {};
-    r.c.forEach((cell, i) => {
-      obj[cols[i]] = cell && cell.v !== null ? cell.v : "";
+    validCols.forEach(col => {
+      const cell = r.c[col.index];
+      obj[col.name] = cell && cell.v !== null ? cell.v : "";
     });
     return obj;
   });
@@ -45,18 +45,33 @@ let DB = {};
 async function loadAll() {
   const results = await Promise.all(SHEETS.map(s => getSheetData(s)));
   SHEETS.forEach((s, i) => DB[s] = results[i]);
-
-  console.log("FINAL DB:", DB);
+  console.log("DB:", DB);
 }
 
-// ================= MAP (แก้ column ไทย) =================
+// ================= MAP DATA (แก้ undefined) =================
 function mapData(row) {
   return {
-    name: row["ชื่อสินค้า"] || row["name"] || "-",
-    stock: Number(row["จำนวน"] || row["stock"] || 0),
-    price: Number(row["ราคา"] || row["price"] || 0),
-    brand: row["แบรนด์"] || row["brand"] || "Unknown",
-    supplier: row["ผู้ขาย"] || row["supplier"] || "-"
+    name:
+      row["ชื่อสินค้า"] ||
+      row["รายการ"] ||
+      row["name"] ||
+      "-",
+
+    stock:
+      Number(row["จำนวน"] || row["stock"] || 0),
+
+    price:
+      Number(row["ราคา"] || row["price"] || 0),
+
+    brand:
+      row["แบรนด์"] ||
+      row["brand"] ||
+      "Unknown",
+
+    supplier:
+      row["Supplier"] ||
+      row["ผู้ขาย"] ||
+      "-"
   };
 }
 
@@ -68,8 +83,7 @@ function navigate(page) {
 
 // ================= DASHBOARD =================
 function renderDashboard() {
-  const raw = DB["STOCK 2026 รับ"] || [];
-  const stock = raw.map(mapData);
+  const stock = (DB["STOCK 2026 รับ"] || []).map(mapData);
 
   const totalItems = stock.length;
   const totalStock = stock.reduce((s,i)=>s+i.stock,0);
@@ -118,7 +132,10 @@ function renderChart(data) {
     type: "bar",
     data: {
       labels: data.map(i=>i.name),
-      datasets: [{label:"Stock", data:data.map(i=>i.stock)}]
+      datasets: [{
+        label: "Stock",
+        data: data.map(i=>i.stock)
+      }]
     }
   });
 }
@@ -132,7 +149,8 @@ function renderStock() {
       ${stock.map(i=>`
         <div class="card">
           <h3>${i.name}</h3>
-          <p>${i.stock}</p>
+          <p>Stock: ${i.stock}</p>
+          <p>Price: ${i.price}</p>
         </div>
       `).join("")}
     </div>
@@ -142,19 +160,21 @@ function renderStock() {
 // ================= TABLE =================
 function renderTable(name) {
   const data = DB[name] || [];
+
   if (!data.length) {
     document.getElementById("content").innerHTML = "No data";
     return;
   }
 
-  const headers = Object.keys(data[0]);
+  // filter ไม่เอา col
+  const headers = Object.keys(data[0]).filter(h => h && !h.startsWith("col"));
 
   document.getElementById("content").innerHTML = `
     <h2>${name}</h2>
     <table>
       <tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr>
       ${data.map(r=>`
-        <tr>${headers.map(h=>`<td>${r[h]}</td>`).join("")}</tr>
+        <tr>${headers.map(h=>`<td>${r[h] || ""}</td>`).join("")}</tr>
       `).join("")}
     </table>
   `;
