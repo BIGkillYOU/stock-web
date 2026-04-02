@@ -1,161 +1,31 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stock Scanner</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
-
-<style>
-body {
-  font-family: 'Prompt', sans-serif;
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.container {
-  background: white;
-  padding: 30px;
-  border-radius: 20px;
-  width: 350px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  text-align: center;
-}
-
-h2 {
-  margin-bottom: 20px;
-}
-
-.input-group {
-  margin-bottom: 15px;
-  text-align: left;
-}
-
-label {
-  font-size: 14px;
-  color: #555;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  margin-top: 5px;
-  font-size: 16px;
-}
-
-button {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 12px;
-  background: #4facfe;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-button:hover {
-  background: #00c6ff;
-}
-
-.result {
-  margin-top: 15px;
-  font-size: 14px;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
 
-<div class="container">
-  <h2>📦 Stock Scanner</h2>
+<div class="app">
+  <aside class="sidebar">
+    <h2>Stock</h2>
+    <button onclick="navigate('dashboard')" data-lang="dashboard">Dashboard</button>
+    <button onclick="navigate('stock')" data-lang="stock">Stock</button>
 
-  <div class="input-group">
-    <label>P/N</label>
-    <input type="text" id="pn" onkeypress="handlePN(event)" autofocus>
-  </div>
+    <hr>
 
-  <div class="input-group">
-    <label>S/N</label>
-    <input type="text" id="sn" onkeypress="handleSN(event)">
-  </div>
+    <button onclick="toggleTheme()">🌙 Theme</button>
+    <button onclick="toggleLang()">🌍 Language</button>
+  </aside>
 
-  <button onclick="sendData()">บันทึกข้อมูล</button>
-
-  <div class="result" id="result"></div>
+  <main class="main">
+    <header>Stock System</header>
+    <section id="content"></section>
+  </main>
 </div>
 
-<script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxcEJXO20Zs5YZ2EfgV00L1ehnSCwgdahbSOWb-xm6NrqBTU5uM8hvoGqpTGsqppihV/exec";
-
-// 🔹 ยิงบาร์โค้ด P/N แล้ว Enter → ไปช่อง S/N
-function handlePN(e) {
-  if (e.key === "Enter") {
-    document.getElementById("sn").focus();
-  }
-}
-
-// 🔹 ยิง S/N แล้ว Enter → บันทึก
-function handleSN(e) {
-  if (e.key === "Enter") {
-    sendData();
-  }
-}
-
-// 🔹 ส่งข้อมูลไป Google Sheet
-async function sendData() {
-  const pn = document.getElementById("pn").value.trim();
-  const sn = document.getElementById("sn").value.trim();
-  const resultBox = document.getElementById("result");
-
-  if (!pn) {
-    resultBox.innerHTML = "❌ กรุณาใส่ P/N";
-    return;
-  }
-
-  if (!sn) {
-    resultBox.innerHTML = "❌ กรุณาใส่ S/N";
-    return;
-  }
-
-  const data = {
-    pn: pn,
-    sn: sn,
-    item: "",
-    brand: "",
-    model: ""
-  };
-
-  resultBox.innerHTML = "⏳ กำลังบันทึก...";
-
-  try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify(data)
-    });
-
-    await res.json();
-
-    resultBox.innerHTML = "✅ บันทึกสำเร็จ!";
-
-    // 🔥 เคลียร์ค่า + พร้อมสแกนต่อ
-    document.getElementById("pn").value = "";
-    document.getElementById("sn").value = "";
-    document.getElementById("pn").focus();
-
-  } catch (err) {
-    resultBox.innerHTML = "❌ เกิดข้อผิดพลาด";
-  }
-}
-</script>
-
+<script src="js/app.js"></script>
 </body>
 </html>
