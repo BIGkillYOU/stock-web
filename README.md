@@ -1,1 +1,0 @@
-# stock-web-app
