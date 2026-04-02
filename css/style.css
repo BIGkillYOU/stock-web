@@ -23,29 +23,51 @@ body {
 }
 
 .sidebar {
-  width: 200px;
-  padding: 20px;
+  width: 220px;
   background: var(--card);
+  padding: 20px;
+}
+
+.sidebar button {
+  display: block;
+  width: 100%;
+  margin: 5px 0;
+  padding: 10px;
 }
 
 .main {
   flex: 1;
   padding: 20px;
+  overflow: auto;
 }
 
 .container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
 }
 
 .card {
   background: var(--card);
-  padding: 20px;
-  border-radius: 12px;
-  transition: 0.3s;
+  padding: 15px;
+  border-radius: 10px;
 }
 
-.card:hover {
-  transform: scale(1.03);
+.card p {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #333;
+  color: white;
+}
+
+td, th {
+  padding: 8px;
 }
