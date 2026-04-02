@@ -1,0 +1,51 @@
+:root {
+  --bg: #ffffff;
+  --text: #111;
+  --card: #f1f1f1;
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --text: #fff;
+  --card: #1e293b;
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 200px;
+  padding: 20px;
+  background: var(--card);
+}
+
+.main {
+  flex: 1;
+  padding: 20px;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 12px;
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: scale(1.03);
+}
