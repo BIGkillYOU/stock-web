@@ -4,26 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stock Dashboard</title>
+
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
 <div class="app">
+
+  <!-- SIDEBAR -->
   <aside class="sidebar">
-    <h2>Stock</h2>
-    <button onclick="navigate('dashboard')" data-lang="dashboard">Dashboard</button>
-    <button onclick="navigate('stock')" data-lang="stock">Stock</button>
+    <h2>📦 STOCK</h2>
+
+    <button onclick="navigate('dashboard')">Dashboard</button>
+    <button onclick="navigate('stock')">Stock Card</button>
+    <button onclick="renderTable('STOCK 2026 รับ')">Table Stock</button>
+    <button onclick="renderTable('Spare Part')">Table Spare</button>
+    <button onclick="renderTable('สินค้าเคลม ส่งซ่อม')">Table Repair</button>
 
     <hr>
 
     <button onclick="toggleTheme()">🌙 Theme</button>
-    <button onclick="toggleLang()">🌍 Language</button>
   </aside>
 
+  <!-- MAIN -->
   <main class="main">
-    <header>Stock System</header>
-    <section id="content"></section>
+    <h1>Stock Management</h1>
+    <div id="content"></div>
   </main>
+
 </div>
 
 <script src="js/app.js"></script>
